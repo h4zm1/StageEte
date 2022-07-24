@@ -9,9 +9,10 @@ using System.Net.Http;
 using System.Web.Http;
 using System.Web.Mvc;
 
+
 namespace StageEte.Controllers
 {
-    public class ValuesController : ApiController
+    public class DevisController : ApiController
     {
         private string IP = Auth.IP;
         private int Port = 6022;
@@ -19,38 +20,20 @@ namespace StageEte.Controllers
         public string Get()
         //public IEnumerable<string> Get()
         {
-            return emptyJsonModel();
+            var json = JsonConvert.SerializeObject(Clients);
+            Debug.WriteLine("length of json string: " + json.Length);
+            return json;
+            //return emptyJsonModel();
         }
 
         // GET api/values/5
         public string Get(int id)
         {
+
             return "value";
         }
-
-        public void Post(string fromMob)
-        {
-            //create a client from incoming json string
-            SERVICE.Lib.Client clientJson = JsonConvert.DeserializeObject<SERVICE.Lib.Client>(fromMob);
-
-            //create a user
-            SERVICE.Lib.Utilisateur utilisateur = uTILISATEUR.Utilisateur(Auth.log, Auth.pwd);
-            SERVICE.Lib.User uSER = new SERVICE.Lib.User(utilisateur.Code, utilisateur.Login, utilisateur.Password);
-
-            //ading new client
-            SERVICE.RESULT_QUERY res = iCLIENT.Save(clientJson, uSER, new SERVICE.REMISES_CLIENT());
-            if (res.OK)
-            {
-                Debug.WriteLine("added successfully");
-            }
-            else
-            {
-
-                Debug.WriteLine("Error while saving : " + res.MESSAGE);
-            }
-            Debug.WriteLine(fromMob);
-        }
-
+       
+      
         // PUT api/values/5
         public void Put(int id, [FromBody] string value)
         {
@@ -89,6 +72,20 @@ namespace StageEte.Controllers
             {
                 SERVICE.ICLIENT cLIENT = Activator.GetObject(typeof(SERVICE.ICLIENT), string.Format("TCP://{0}:{1}/{2}", IP, Port, "CLIENT")) as SERVICE.ICLIENT;
                 return cLIENT;
+
+            }
+            set
+            {
+
+            }
+        }
+
+        List<SERVICE.Lib.BaseClient> Clients
+        {
+            get
+            {
+
+                return iCLIENT.MesClients;
 
             }
             set
