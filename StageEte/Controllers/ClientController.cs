@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using StageEte.App_Start;
+using StageEte.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,6 +16,11 @@ namespace StageEte.Controllers
     {
         private string IP = Auth.IP;
         private int Port = 6022;
+        struct IncDelVal
+        {
+            public int utilisateurId;
+            public int code;
+        }
         // GET api/values
         public string Get()
         //public IEnumerable<string> Get()
@@ -30,18 +36,18 @@ namespace StageEte.Controllers
         {
             return "value";
         }
-       
+
         public string Post(string mobClient)
         {
             //create a client from incoming json string
             SERVICE.Lib.Client clientJson = JsonConvert.DeserializeObject<SERVICE.Lib.Client>(mobClient);
-
             //create a user
             SERVICE.Lib.Utilisateur utilisateur = uTILISATEUR.Utilisateur(Auth.log, Auth.pwd);
             SERVICE.Lib.User uSER = new SERVICE.Lib.User(utilisateur.Code, utilisateur.Login, utilisateur.Password);
 
             //ading new client
             SERVICE.RESULT_QUERY res = iCLIENT.Save(clientJson, uSER, new SERVICE.REMISES_CLIENT());
+
             if (res.OK)
             {
                 Debug.WriteLine("added successfully");
@@ -55,15 +61,33 @@ namespace StageEte.Controllers
             return res.MESSAGE;
         }
 
-       
+
         // PUT api/values/5
         public void Put(int id, [FromBody] string value)
         {
         }
 
         // DELETE api/values/5
-        public void Delete(int id)
+        public string Delete(string delJson)
         {
+            //obviously a security breach, maybe will fix when I got time 
+            IncDelVal incVal = JsonConvert.DeserializeObject<IncDelVal>(delJson);
+
+            SERVICE.Lib.Utilisateur utilisateur = uTILISATEUR.Utilisateur(incVal.utilisateurId);
+
+            SERVICE.Lib.User user = new SERVICE.Lib.User(utilisateur.Code, utilisateur.Login, utilisateur.Password);
+            SERVICE.RESULT_QUERY res = iCLIENT.Supprimer(incVal.code, user);
+
+            if (res.OK)
+            {
+                Debug.WriteLine("deleted successfully");
+            }
+            else
+            {
+                Debug.WriteLine("Error while deleting : " + res.MESSAGE);
+            }
+            return res.MESSAGE;
+
         }
 
         string emptyJsonModel()

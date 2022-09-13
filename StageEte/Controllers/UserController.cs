@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json;
+using SERVICE.Lib;
 using StageEte.App_Start;
+using StageEte.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,12 +17,13 @@ namespace StageEte.Controllers
     {
         private string IP = Auth.IP;
         private int Port = 6022;
-
         // GET api/values
         public string Get()
         {
-            var json = JsonConvert.SerializeObject(Clients);
-            Debug.WriteLine("length of json string: " + json.Length);
+            //var json = JsonConvert.SerializeObject(Clients);
+            //Debug.WriteLine("length of json string: " + json.Length);
+            SERVICE.Lib.Utilisateur utilisateur = uTILISATEUR.Utilisateur(4);
+            var json = JsonConvert.SerializeObject(utilisateur);
             return json;
             //return emptyJsonModel();
         }
@@ -34,11 +37,11 @@ namespace StageEte.Controllers
 
         public string Post(string mobSign)
         {
-
+            Debug.WriteLine("inc string" + mobSign);
             //create a user from incoming json string (can use a struct but wtv)
-            SERVICE.Lib.User user = JsonConvert.DeserializeObject<SERVICE.Lib.User>(mobSign);
+            SERVICE.Lib.User _user = JsonConvert.DeserializeObject<SERVICE.Lib.User>(mobSign);
 
-            SERVICE.Lib.Utilisateur utilisateur = uTILISATEUR.Utilisateur(user.Login, user.Password);
+            SERVICE.Lib.Utilisateur utilisateur = uTILISATEUR.Utilisateur(_user.Login, _user.Password);
 
             if (utilisateur == null)
             {
@@ -47,8 +50,14 @@ namespace StageEte.Controllers
             }
             else
             {
-                Debug.WriteLine("found");
-                return "found";
+                Debug.WriteLine("found  " + JsonConvert.SerializeObject(_user));
+                _User user = new _User();
+                user.password=_user.Password;
+                user.login = _user.Login;
+                user.id = _user.Id;
+                user.IdUtilisateur = utilisateur.Code;//wouldn't this eventually fail? who knows!!
+                var json = JsonConvert.SerializeObject(user);
+                return json;
             }
         }
         // PUT api/values/5
