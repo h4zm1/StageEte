@@ -15,5 +15,6 @@ namespace StageEte.Models
         public string code { get; set; }
         public List<_Article> listArticle { get; set; }
         public int IdUtilisateur { get; set; }
+        public decimal Total { get; set; }
     }
 }

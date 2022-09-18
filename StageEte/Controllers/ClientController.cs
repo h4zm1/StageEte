@@ -70,6 +70,7 @@ namespace StageEte.Controllers
         // DELETE api/values/5
         public string Delete(string delJson)
         {
+            /// devis relation???
             //obviously a security breach, maybe will fix when I got time 
             IncDelVal incVal = JsonConvert.DeserializeObject<IncDelVal>(delJson);
 

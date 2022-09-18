@@ -22,6 +22,11 @@ namespace StageEte.Controllers
 
         private string IP = Auth.IP;
         private int Port = 6022;
+        struct IncDevisDelVal
+        {
+            public int code;// not really, more like devis ID, but got to match it with the other struct
+            public int utilisateurId;
+        }
 
         // GET api/values
         public string GetArticle()
@@ -36,7 +41,7 @@ namespace StageEte.Controllers
                 arti.Name = art.Name;
                 arti.Achat = art.Achat;
                 arti.Categorie = art.Categorie.ToString();
-                arti.Vente = art.Vente.ToString();
+                arti.Vente = art.Vente;
                 arti.Code = art.Code;
                 arti.Tva = art.Tva.ToString();
                 arti.Designation = art.Designation;
@@ -46,7 +51,6 @@ namespace StageEte.Controllers
 
 
             var json = JsonConvert.SerializeObject(listArt);
-
 
 
             Debug.WriteLine("length of json string: " + json.Length);
@@ -64,9 +68,10 @@ namespace StageEte.Controllers
 
             //}
             //var json = JsonConvert.SerializeObject(listDev);
-            return json;
+            return id.ToString();
         }
 
+        // POST api/Devis/Post
         public string Post(string days)
         {
             int idays = int.Parse(days);
@@ -82,14 +87,14 @@ namespace StageEte.Controllers
                 devi.Date = dev.Date.ToString("dd/MMMM/yyyy");
                 devi.nom = dev.Nom.ToString();
                 devi.clientCode = dev.Client.Code;
-
+                devi.Total = dev.Brut;//raw
                 listDevis.Add(devi);
             }
             var json = JsonConvert.SerializeObject(listDevis);
             return json;
 
         }
-        // PUT api/values/5
+        // PUT /api/Devis/Put
         public string Put(string value)
         {
             //_devis contains all the (raw) data needed to register a devis
@@ -107,31 +112,48 @@ namespace StageEte.Controllers
 
             devis.Client = client;
             devis.Attes_exo = "";
+            int currentLigneDevisIndex = 0;
             foreach (_Article _article in _devis.listArticle)
-            {//article got min 1 quantity
-                for (int i = 0; i < _article.Quantity; i++)
-                {
+            {
+                //there's some shared propreties and it seems they're getting auto assigned correctly??
+                var json = JsonConvert.SerializeObject(_article);
+                Article art = JsonConvert.DeserializeObject<Article>(json);
+                devis.AddArticle(art);
 
-                    //there's some shared propreties and it seems they're getting auto assigned correctly??
-                    var json = JsonConvert.SerializeObject(_article);
-                    Article art = JsonConvert.DeserializeObject<Article>(json);
-                    devis.AddArticle(art);
-                }
-
+                devis.Lignes[currentLigneDevisIndex].Qte = _article.Quantity;
+                currentLigneDevisIndex++;
             }
-            
 
             SERVICE.RESULT_QUERY res = IDEVIS.Save(devis, user);
-            Debug.WriteLine("MESSAGE:: "+res.ToString());
+            Debug.WriteLine("MESSAGE:: " + res.ToString());
             return res.MESSAGE;
 
+
+            //Debug.WriteLine(devis.Brut + "  " + devis.Lignes[0].Prix_u_ht+ "  "+ devis.Lignes[0].Article.Vente);
+            //return "";
         }
 
-        // DELETE api/values/5
-        public void Delete(int id)
+        // DELETE /api/Devis/Delete
+        public string Delete(string delJson)
         {
-            ///SERVICE.RESULT_QUERY res = IDEVIS.Delete(159, uSER);
+            IncDevisDelVal incVal = JsonConvert.DeserializeObject<IncDevisDelVal>(delJson);
 
+            SERVICE.Lib.Utilisateur utilisateur = uTILISATEUR.Utilisateur(incVal.utilisateurId);
+
+            SERVICE.Lib.User user = new SERVICE.Lib.User(utilisateur.Code, utilisateur.Login, utilisateur.Password);
+
+
+            SERVICE.RESULT_QUERY res = IDEVIS.Delete(incVal.code, user);
+
+            if (res.OK)
+            {
+                Debug.WriteLine("deleted successfully");
+            }
+            else
+            {
+                Debug.WriteLine("Error while deleting : " + res.MESSAGE);
+            }
+            return res.MESSAGE;
         }
         string emptyJsonModel()
         {
